@@ -9,40 +9,22 @@ cmake_minimum_required(VERSION 3.4.1)
 # You can define multiple libraries, and CMake builds it for you.
 # Gradle automatically packages shared libraries with your APK.
 
-# add by lqt.
-add_library(
-             decodec
+add_library(lib_ffmpeg SHARED IMPORTED)
+set_target_properties(lib_ffmpeg PROPERTIES IMPORTED_LOCATION
+    ${CMAKE_SOURCE_DIR}/src/main/cpp/armeabi-v7a/libffmpeg.so)
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
+
+add_library( avcodec
              SHARED
-             src/main/cpp/decodec.c)
+             ${CMAKE_SOURCE_DIR}/src/main/cpp/decodec.c)
 
-include_directories(src/main/cpp/armeabi-v7a/include )
+target_include_directories(avcodec PRIVATE ${CMAKE_SOURCE_DIR}/src/main/cpp/armeabi-v7a/include )
 
-add_library(
-     avcodec
-     STATIC
-     IMPORTED
- )
-set_target_properties(avcodec
-                       PROPERTIES IMPORTED_LOCATION
-                       src/main/cpp/armeabi-v7a/lib/libavcodec.a )
-add_library(
-     avfilter
-     STATIC
-     IMPORTED
- )
-set_target_properties(avfilter
-                       PROPERTIES IMPORTED_LOCATION
-                       src/main/cpp/armeabi-v7a/lib/libavfilter.a )
-
-
-find_library( # Sets the name of the path variable.
-              log-lib
-
-              # Specifies the name of the NDK library that
-              # you want CMake to locate.
-              log )
-
-target_link_libraries( decodec
+target_link_libraries(
                        avcodec
-                       avfilter
-                       ${log-lib} )
+                       jnigraphics
+                       lib_ffmpeg
+                       android
+                       log )
+

@@ -105,6 +105,7 @@ Java_com_medilab_avlib_AVdecode_init(JNIEnv *pEnv, jclass type, jstring pFileNam
     sws_ctx = sws_getContext(pCodecCtx->width,pCodecCtx->height,pCodecCtx->pix_fmt,
                              pCodecCtx->width,pCodecCtx->height,AV_PIX_FMT_RGBA,SWS_BILINEAR,
                              NULL,NULL,NULL);
+    return 0;
 }
 
 JNIEXPORT jobject JNICALL

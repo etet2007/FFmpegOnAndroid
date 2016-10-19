@@ -6,9 +6,9 @@ package com.medilab.avlib;
 
 public class AVdecode {
     static {
-//        System.loadLibrary("ffmpeg");
+        System.loadLibrary("ffmpeg");
 //        System.loadLibrary("avlib");
-        System.loadLibrary("libdecodec");
+        System.loadLibrary("avcodec");
     }
     //初始化函数
     public static native int init(String videoFileName);
