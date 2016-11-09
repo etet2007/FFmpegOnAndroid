@@ -123,8 +123,11 @@ public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback
     public void surfaceCreated(SurfaceHolder holder) {
         // TODO Auto-generated method stub
         object=AVdecodeInClass.init(Environment.getExternalStorageDirectory().getAbsolutePath() + "/demo/sintel.mp4");
+//        object=AVdecodeInClass.init("rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov");//test trsp流
         object2=AVdecodeInClass.init(Environment.getExternalStorageDirectory().getAbsolutePath() + "/demo/record.264");
-        AVdecodeInClass.seekFrameBySec(object,15);
+
+        AVdecodeInClass.seekFrameBySec(object,15);//test seekFrame
+
         Log.i(TAG, "object width height"+AVdecodeInClass.getWidth(object)+"*"+AVdecodeInClass.getHeight(object));
         Log.i(TAG, "object2 width height"+AVdecodeInClass.getWidth(object2)+"*"+AVdecodeInClass.getHeight(object2));
         Log.i(TAG, "object getFramerateMils"+AVdecodeInClass.getFramerateMils(object));
