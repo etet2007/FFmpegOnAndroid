@@ -5,13 +5,13 @@ package com.medilab.avlib;
  */
 
 public class AVdecode {
-    static {
-        System.loadLibrary("ffmpeg");
+//    static {
+//        System.loadLibrary("ffmpeg");
 //        System.loadLibrary("avlib");
-        System.loadLibrary("avcodec");
-    }
+//        System.loadLibrary("avcodec");
+//    }
     //初始化函数
-    public static native int init(String videoFileName);
+    public static native long init(String videoFileName);
     //向后读取frameNumber帧
     public static native Object readFrame(int frameNumber);
     //析构

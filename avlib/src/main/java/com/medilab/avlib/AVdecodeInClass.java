@@ -1,19 +1,24 @@
 package com.medilab.avlib;
 
 /**
- * Created by Lyan200 on 2016/10/8.
+ * 创建新的类AVdecodeInClass，对应的c文件decodecInClass.c，在decodecInClass.c调用类ffmpegDecode
  */
 
 public class AVdecodeInClass {
     static {
         System.loadLibrary("ffmpeg");
-//        System.loadLibrary("avlib");
-        System.loadLibrary("avcodec");
+        System.loadLibrary("avcodecInClass");
     }
     //初始化函数
     public static native long init(String videoFileName);
-    //向后读取frameNumber帧
-    public static native Object readFrame(int frameNumber);
+    //从第frameNumber帧后开始返回
+    public static native Object readFrame(long object,int frameNumber);
+
+    public static native int getWidth(long object);
+    public static native int getHeight(long object);
+    public static native int getFramerateMils(long object);
+    //根据秒数跳转到某时间戳
+    public static native void seekFrameBySec(long object,int secs);
     //析构
-    public static native void destroy();
+    public static native void destroy(long object);
 }

@@ -1,12 +1,8 @@
 #include <jni.h>
 #include "malloc.h"
 
-#include <wchar.h>
 #include <ffmpegdecode.h>
 
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
 
 /*for android logs*/
 #include <android/log.h>
@@ -17,56 +13,77 @@
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__);
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__);
 
-jobject createBitmap(JNIEnv *pEnv, int pWidth, int pHeight) {
-    int i;
-    //get Bitmap class and createBitmap method ID
-    jclass javaBitmapClass = (jclass)(*pEnv)->FindClass(pEnv, "android/graphics/Bitmap");
-    jmethodID mid = (*pEnv)->GetStaticMethodID(pEnv, javaBitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
-    //create Bitmap.Config
-    //reference: https://forums.oracle.com/thread/1548728
-    const wchar_t* configName = L"ARGB_8888";
-    int len = wcslen(configName);
-    jstring jConfigName;
-    if (sizeof(wchar_t) != sizeof(jchar)) {
-        //wchar_t is defined as different length than jchar(2 bytes)
-        jchar* str = (jchar*)malloc((len+1)*sizeof(jchar));
-        for (i = 0; i < len; ++i) {
-            str[i] = (jchar)configName[i];
-        }
-        str[len] = 0;
-        jConfigName = (*pEnv)->NewString(pEnv, (const jchar*)str, len);
-    } else {
-        //wchar_t is defined same length as jchar(2 bytes)
-        jConfigName = (*pEnv)->NewString(pEnv, (const jchar*)configName, len);
+
+
+extern "C"
+{
+JNIEXPORT jint JNICALL
+Java_com_medilab_avlib_AVdecodeInClass_getFramerateMils(JNIEnv *env, jclass type, jlong object) {
+    if(object!= NULL){
+        ffmpegDecode* ffmpegDecodeObject= (ffmpegDecode *) object;
+        return ffmpegDecodeObject->getAvg_frame_rate();
     }
-    jclass bitmapConfigClass = (*pEnv)->FindClass(pEnv, "android/graphics/Bitmap$Config");
-    jobject javaBitmapConfig = (*pEnv)->CallStaticObjectMethod(pEnv, bitmapConfigClass,
-                                                               (*pEnv)->GetStaticMethodID(pEnv, bitmapConfigClass, "valueOf", "(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;"), jConfigName);
-    //create the bitmap
-    return (*pEnv)->CallStaticObjectMethod(pEnv, javaBitmapClass, mid, pWidth, pHeight, javaBitmapConfig);
+    return NULL;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_medilab_avlib_AVdecodeInClass_getWidth(JNIEnv *env, jclass type, jlong object) {
+    if(object!= NULL) {
+        ffmpegDecode *ffmpegDecodeObject = (ffmpegDecode *) object;
+        return ffmpegDecodeObject->width;
+    }
+    return NULL;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_medilab_avlib_AVdecodeInClass_getHeight(JNIEnv *env, jclass type, jlong object) {
+    if(object!= NULL) {
+        ffmpegDecode *ffmpegDecodeObject = (ffmpegDecode *) object;
+        return ffmpegDecodeObject->height;
+    }
+    return NULL;
 }
 
 JNIEXPORT jlong JNICALL
 Java_com_medilab_avlib_AVdecodeInClass_init(JNIEnv *env, jclass type, jstring videoFileName_) {
     const char *videoFileName = env->GetStringUTFChars(videoFileName_, 0);
+    //make a copy to tempStr
+    char *tempStr = new char[strlen(videoFileName)+1];
+    strcpy(tempStr, videoFileName);
+    //new 一个解码器对象
+    ffmpegDecode *ffmpegDecodeObject=new ffmpegDecode(tempStr);
 
-    // TODO
-    ffmpegDecode ffmpegDecodeObject=new ffmpegDecode(videoFileName);
-
-//    env->ReleaseStringUTFChars(videoFileName_, videoFileName);
+    env->ReleaseStringUTFChars(videoFileName_, videoFileName);
+    return  (jlong )ffmpegDecodeObject;
 }
-
 
 JNIEXPORT jobject JNICALL
-                  Java_com_medilab_avlib_AVdecodeInClass_readFrame(JNIEnv *env, jclass type, jint frameNumber) {
-
-    // TODO
-
+    Java_com_medilab_avlib_AVdecodeInClass_readFrame(JNIEnv *env, jclass type,jlong object, jint frameNumber) {
+    if(object!= NULL) {
+        // TODO
+        ffmpegDecode *ffmpegDecodeObject = (ffmpegDecode *) object;
+        return ffmpegDecodeObject->readFrame(env, frameNumber);
+    }
+    return NULL;
 }
 
+    JNIEXPORT void JNICALL
+    Java_com_medilab_avlib_AVdecodeInClass_destroy(JNIEnv *env, jclass type,jlong object) {
+        if(object!= NULL) {
+            delete (ffmpegDecode *) object;
+        }
+        return;
+    }
+
 JNIEXPORT void JNICALL
-Java_com_medilab_avlib_AVdecodeInClass_destroy(JNIEnv *env, jclass type) {
+Java_com_medilab_avlib_AVdecodeInClass_seekFrameBySec(JNIEnv *env, jclass type, jlong object,jint secs) {
+    if(object!= NULL) {
+        // TODO
+        ffmpegDecode *ffmpegDecodeObject = (ffmpegDecode *) object;
+        ffmpegDecodeObject->seekFrameBySec(secs);
+        return ;
+    }
+    return ;
 
-// TODO
-
+}
 }

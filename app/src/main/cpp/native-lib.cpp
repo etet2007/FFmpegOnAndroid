@@ -1,6 +1,8 @@
 #include <jni.h>
 #include <string>
 
+
+
 extern "C"
 jstring
 Java_com_medilab_av_MainActivity_stringFromJNI(

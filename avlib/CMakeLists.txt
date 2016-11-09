@@ -15,16 +15,30 @@ set_target_properties(lib_ffmpeg PROPERTIES IMPORTED_LOCATION
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 
-add_library( avcodec
-             SHARED
-             ${CMAKE_SOURCE_DIR}/src/main/cpp/decodec.c)
+#add_library( avcodec
+ #            SHARED
+  #           ${CMAKE_SOURCE_DIR}/src/main/cpp/decodec.c)
 
-target_include_directories(avcodec PRIVATE ${CMAKE_SOURCE_DIR}/src/main/cpp/armeabi-v7a/include )
+#target_include_directories(avcodec PRIVATE ${CMAKE_SOURCE_DIR}/src/main/cpp/armeabi-v7a/include )
+
+#target_link_libraries(
+ #                      avcodec
+  #                     jnigraphics
+   #                    lib_ffmpeg
+    #                   android
+     #                  log )
+
+add_library( avcodecInClass
+             SHARED
+             ${CMAKE_SOURCE_DIR}/src/main/cpp/decodecInClass.cpp
+             ${CMAKE_SOURCE_DIR}/src/main/cpp/ffmpegdecode.cpp
+             )
+
+target_include_directories(avcodecInClass PRIVATE ${CMAKE_SOURCE_DIR}/src/main/cpp/armeabi-v7a/include )
 
 target_link_libraries(
-                       avcodec
+                        avcodecInClass
                        jnigraphics
                        lib_ffmpeg
                        android
                        log )
-

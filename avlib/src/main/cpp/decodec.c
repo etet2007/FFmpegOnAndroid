@@ -4,11 +4,8 @@
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
-#include <libavutil/pixfmt.h>
 
-#include <stdio.h>
 #include <wchar.h>
-
 
 /*for android logs*/
 #include <android/log.h>
@@ -18,23 +15,23 @@
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__);
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__);
 
-
 AVFormatContext *pFormatCtx = NULL;
-int             i=0, videoStream;
 AVCodecContext  *pCodecCtx = NULL;
 AVCodec         *pCodec = NULL;
 AVFrame         *pFrame = NULL;
 AVFrame         *pFrameRGBA = NULL;
 AVPacket        packet;
+int             i=0, videoStream;
 int             frameFinished;
+struct SwsContext      *sws_ctx = NULL;
+
 jobject			bitmap;
 void* 			buffer;
 int ret;
 AVDictionary    *optionsDict = NULL;
-struct SwsContext      *sws_ctx = NULL;
 char *videoFileName;
 int currentFrameNumber=0;
-
+/*
 jobject createBitmap(JNIEnv *pEnv, int pWidth, int pHeight) {
     int i;
     //get Bitmap class and createBitmap method ID
@@ -63,9 +60,8 @@ jobject createBitmap(JNIEnv *pEnv, int pWidth, int pHeight) {
     //create the bitmap
     return (*pEnv)->CallStaticObjectMethod(pEnv, javaBitmapClass, mid, pWidth, pHeight, javaBitmapConfig);
 }
-
-
-JNIEXPORT jint JNICALL
+*/
+JNIEXPORT jlong JNICALL
 Java_com_medilab_avlib_AVdecode_init(JNIEnv *pEnv, jclass type, jstring pFileName) {
     // Register all formats and codecs
     av_register_all();
@@ -91,6 +87,7 @@ Java_com_medilab_avlib_AVdecode_init(JNIEnv *pEnv, jclass type, jstring pFileNam
         return -1; // Didn't find a video stream
     // Get a pointer to the codec context for the video stream
     pCodecCtx=pFormatCtx->streams[videoStream]->codec;
+
     // Find the decoder for the video stream
     pCodec=avcodec_find_decoder(pCodecCtx->codec_id);
     if(pCodec==NULL) {
@@ -113,16 +110,13 @@ Java_com_medilab_avlib_AVdecode_readFrame(JNIEnv *pEnv, jclass type, jint frameN
 
     clock_t time_start, time_finish;
     long  time_duration = 0;
-
-    // Read frames and save first five frames to disk
-
+    // Read frames
     while(av_read_frame(pFormatCtx, &packet)>=0) {
         // Is this a packet from the video stream?
         if(packet.stream_index==videoStream) {
             time_start=clock();//开始时间
             // Allocate video frame
             pFrame=av_frame_alloc();//av_frame_alloc  avcodec_alloc_frame
-
             // Decode video frame
             ret = avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);//解码
             time_finish= clock();//结束时间
@@ -152,10 +146,12 @@ Java_com_medilab_avlib_AVdecode_readFrame(JNIEnv *pEnv, jclass type, jint frameN
                     avpicture_fill((AVPicture *)pFrameRGBA, buffer, AV_PIX_FMT_RGBA, pCodecCtx->width, pCodecCtx->height);
                     // Convert the image from its native format to RGBA
                     sws_scale(sws_ctx,(uint8_t const * const *)pFrame->data,pFrame->linesize,0,pCodecCtx->height,pFrameRGBA->data,pFrameRGBA->linesize);
+
                     time_finish= clock();
                     time_duration=(time_finish - time_start);
                     LOGI("sws_scale : %ld",time_duration);//10-08 14:38:53.271 17578-17910/com.example.wangalbert.prac_2 I/ffmpeg: sws_scale : 7782
 
+                    //unlock the bitmap
                     AndroidBitmap_unlockPixels(pEnv, bitmap);
                     // Free the packet that was allocated by av_read_frame
                     av_free_packet(&packet);
@@ -164,16 +160,11 @@ Java_com_medilab_avlib_AVdecode_readFrame(JNIEnv *pEnv, jclass type, jint frameN
                     // Free the YUV frame
                     av_free(pFrame);
 
-                    return bitmap;
-
-
+                    return bitmap;//直接return
                 }
 //                currentFrameNumber++;
                 //得到帧且大于某次则返回
 //                if(frameFinished && (currentFrameNumber>=frameNumber)){
-
-                //unlock the bitmap
-
 //                }
                 /*
                 LOGI("getBitmapFromNative() call");
@@ -184,7 +175,6 @@ Java_com_medilab_avlib_AVdecode_readFrame(JNIEnv *pEnv, jclass type, jint frameN
                 (*pEnv)->CallVoidMethod(pEnv, pObj, getBitmapFromNativeMID, bitmap);
                 (*pEnv)->DeleteLocalRef(pEnv,mainActCls);
                 */
-
             }
             // Free the packet that was allocated by av_read_frame
             av_free_packet(&packet);
@@ -193,12 +183,8 @@ Java_com_medilab_avlib_AVdecode_readFrame(JNIEnv *pEnv, jclass type, jint frameN
             // Free the YUV frame
             av_free(pFrame);
         }
-
-
     }
-
     return NULL;
-
 }
 
 JNIEXPORT void JNICALL
