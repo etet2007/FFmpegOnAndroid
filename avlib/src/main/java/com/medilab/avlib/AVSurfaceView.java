@@ -15,12 +15,9 @@ import android.view.SurfaceView;
 
 /**
  * bug:
-    rtsp流崩溃。
- 视频解码速度无法达到实时时只会向后延迟。
-  * 11-16 08:21:56.861 2119-2119/com.medilab.avlib I/AVSurfaceView: surfaceDestroyed
- 11-16 08:21:56.873 2119-2138/com.medilab.avlib A/libc: Fatal signal 11 (SIGSEGV), code 1, fault addr 0x0 in tid 2138 (Thread-177)
-
- 为mThread里的空指针调用。
+    rtsp流视频在Nexus上会花屏。
+    视频播放完后线程还在继续运行，现在通过判断mBitmap是否为空来判断结束。
+    视频同步问题。
  */
 
 public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback{
@@ -65,8 +62,6 @@ public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback
 
                         // 锁定画布，得到Canvas对象
                         canvas = mSurfaceHolder.lockCanvas();
-                        if (canvas != null)
-                            canvas.drawColor(Color.WHITE);
                         //对mBitmap进行回收
                         if (mBitmap != null && !mBitmap.isRecycled()) {
                             mBitmap.recycle();
@@ -76,7 +71,11 @@ public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback
                         mBitmap = (Bitmap) AVdecodeInClass.readFrame(object);
 //                mBitmap2= (Bitmap) AVdecodeInClass.readFrame(object2);
 
+                        if(mBitmap==null){
+                            break;
+                        }
                         if (mBitmap != null && canvas!=null) {
+                            canvas.drawColor(Color.WHITE);
                             canvas.drawBitmap(mBitmap, null, new Rect(0, 0, drawBitmapWidth, drawBitmapHeight), null);
 //                      canvas.drawBitmap(mBitmap2,null,new Rect(100,100,drawBitmapWidth+100,drawBitmapHeight+100),null);
                         }
@@ -90,7 +89,6 @@ public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback
                         long timePast = time2 - time1;
 
                         Log.i(TAG, "timePast " + timePast);
-                        //Log.i(TAG, Thread.currentThread().toString());
 
                         //延时
                         if (timePast < frameRateMils) {
@@ -100,6 +98,7 @@ public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback
                                 e.printStackTrace();
                             }
                         }
+
                     }
 
 

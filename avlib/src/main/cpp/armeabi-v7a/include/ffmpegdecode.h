@@ -34,6 +34,7 @@ public:
     int height;
 
     bool isOpened= true;
+    bool isPlayFinished=false;
 private:
     AVFormatContext    *pFormatCtx;
     AVCodecContext  *pCodecCtx;

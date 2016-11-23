@@ -20,7 +20,12 @@ import android.widget.Toast;
  */
 
 public class testMedia extends Activity {
-    /** Called when the activity is first created. */
+
+    private SurfaceView surfaceView;
+    private SurfaceHolder surfaceHolder;
+
+    private MediaPlayer mMediaPlayer = null;
+
 
     private SeekBar skb_audio=null;
     private Button btn_start_audio = null;
@@ -29,10 +34,7 @@ public class testMedia extends Activity {
     private SeekBar skb_video=null;
     private Button btn_start_video = null;
     private Button btn_stop_video = null;
-    private SurfaceView surfaceView;
-    private SurfaceHolder surfaceHolder;
 
-    private MediaPlayer mMediaPlayer = null;
     private Timer mTimer;
     private TimerTask mTimerTask;
 
@@ -43,7 +45,7 @@ public class testMedia extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        //----------Media控件设置---------//
+        //----------MediaPlayer设置---------//
         mMediaPlayer =new MediaPlayer();
 
         //播放结束之后弹出提示

@@ -182,8 +182,7 @@ jobject  ffmpegDecode :: readFrame(JNIEnv *pEnv){
     long  time_duration = 0;
     // Read frames
     while(av_read_frame(pFormatCtx, packet)>=0) {
-        LOGI("av_read_frame() runs");
-
+//        LOGI("av_read_frame() runs");
         // Is this a packet from the video stream?
         if(packet->stream_index==videoStream) {
             time_start=clock();//开始时间
@@ -199,9 +198,8 @@ jobject  ffmpegDecode :: readFrame(JNIEnv *pEnv){
                 LOGE("Decode Error.\n");
                 return NULL;
             }
-            //if got_picture
             if(got_picture) {
-                LOGI("got_picture ");
+//                LOGI("got_picture ");
 
 //                if(++currentFrameNumber >= frameNumber) {
                     time_start=clock();
@@ -233,7 +231,6 @@ jobject  ffmpegDecode :: readFrame(JNIEnv *pEnv){
                     // Free the YUV frame
                     av_free(pAvFrame);
 
-                    LOGI("got_picture aleady return");
                     return bitmap;//直接return
             }
             // Free the packet that was allocated by av_read_frame
@@ -242,6 +239,8 @@ jobject  ffmpegDecode :: readFrame(JNIEnv *pEnv){
             av_free(pAvFrame);
         }
     }
+
+    isPlayFinished=true;
     return NULL;
 }
 int ffmpegDecode::getAvg_frame_rate() const
