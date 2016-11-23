@@ -18,7 +18,7 @@
 extern "C"
 {
 JNIEXPORT jint JNICALL
-Java_com_medilab_avlib_AVdecodeInClass_getFramerateMils(JNIEnv *env, jclass type, jlong object) {
+Java_com_medilab_avlib_AVdecodeInClass_getFrameRateMils(JNIEnv *env, jclass type, jlong object) {
     if(object!= NULL){
         ffmpegDecode* ffmpegDecodeObject= (ffmpegDecode *) object;
         return ffmpegDecodeObject->getAvg_frame_rate();
@@ -58,11 +58,11 @@ Java_com_medilab_avlib_AVdecodeInClass_init(JNIEnv *env, jclass type, jstring vi
 }
 
 JNIEXPORT jobject JNICALL
-    Java_com_medilab_avlib_AVdecodeInClass_readFrame(JNIEnv *env, jclass type,jlong object, jint frameNumber) {
+    Java_com_medilab_avlib_AVdecodeInClass_readFrame(JNIEnv *env, jclass type,jlong object) {
     if(object!= NULL) {
         // TODO
         ffmpegDecode *ffmpegDecodeObject = (ffmpegDecode *) object;
-        return ffmpegDecodeObject->readFrame(env, frameNumber);
+        return ffmpegDecodeObject->readFrame(env);
     }
     return NULL;
 }
@@ -70,7 +70,9 @@ JNIEXPORT jobject JNICALL
     JNIEXPORT void JNICALL
     Java_com_medilab_avlib_AVdecodeInClass_destroy(JNIEnv *env, jclass type,jlong object) {
         if(object!= NULL) {
-            delete (ffmpegDecode *) object;
+            ffmpegDecode *ffmpegDecodeObject = (ffmpegDecode *) object;
+            delete ffmpegDecodeObject;
+//            ffmpegDecodeObject->~ffmpegDecode();
         }
         return;
     }

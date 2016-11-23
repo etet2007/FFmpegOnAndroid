@@ -24,14 +24,16 @@ public:
 //     getDecodedFrame();
 //     getLastFrame();
 //    int readOneFrame();
-    jobject readFrame(JNIEnv *pEnv,int frameNumber);
+    jobject readFrame(JNIEnv *pEnv);
 
     int getAvg_frame_rate() const;
     int getSkippedFramesNum() const;
     void seekFrameBySec(int secs);
-//为了方便
+//帧原始宽高
     int width;
     int height;
+
+    bool isOpened= true;
 private:
     AVFormatContext    *pFormatCtx;
     AVCodecContext  *pCodecCtx;
@@ -49,14 +51,12 @@ private:
     int ret, got_picture;
     int y_size;
 
-    jobject			bitmap;
-    uint8_t* 			buffer;
+    jobject	  bitmap;
+    uint8_t*  buffer;
 
 
-    AVRational m_video_avg_frame_rate; //平均帧率  add by lqt
+    AVRational m_video_avg_frame_rate; //平均帧率
     int skippedFramesNum; //跳过的帧数
-//    cv::Mat *pCvMat;
-//    cv::Mat emptyMat;
 
     void init();
     void openDecode();

@@ -1,5 +1,8 @@
 #include <jni.h>
 #include "malloc.h"
+#include "armeabi-v7a/include/libavformat/avformat.h"
+#include "armeabi-v7a/include/libavcodec/avcodec.h"
+#include "armeabi-v7a/include/libavutil/frame.h"
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>

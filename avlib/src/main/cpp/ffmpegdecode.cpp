@@ -102,6 +102,7 @@ void ffmpegDecode :: init(){
     if(avformat_open_input(&pFormatCtx,filepath,NULL,NULL)!=0)
     {
         LOGE("cannot open the files.\n");
+        isOpened= false;
         return;
     }
 
@@ -109,6 +110,7 @@ void ffmpegDecode :: init(){
     if(avformat_find_stream_info(pFormatCtx,NULL)<0)
     {
         printf("Couldn't find stream information.\n");
+        isOpened= false;
         return;
     }
     return;
@@ -154,7 +156,7 @@ void ffmpegDecode :: prepare()
     //分配一个帧指针，指向解码后的原始帧
     pAvFrame=av_frame_alloc(); // avcodec_alloc_frame -->  av_frame_alloc()
     y_size = pCodecCtx->width * pCodecCtx->height;
-    //宽高
+    //帧原始宽高
     width= pCodecCtx->width;
     height=pCodecCtx->height;
     //分配帧内存
@@ -174,12 +176,14 @@ void ffmpegDecode :: prepare()
 
     LOGI("-------------------------------------------------\n");
 }
-//从第frameNumber帧开始返回，尾部应该还是会跳过某些帧。也许使用av_seek_frame来定位帧。
-jobject  ffmpegDecode :: readFrame(JNIEnv *pEnv,int frameNumber){
+//尾部应该还是会跳过某些帧。也许使用av_seek_frame来定位帧。
+jobject  ffmpegDecode :: readFrame(JNIEnv *pEnv){
     clock_t time_start, time_finish;
     long  time_duration = 0;
     // Read frames
     while(av_read_frame(pFormatCtx, packet)>=0) {
+        LOGI("av_read_frame() runs");
+
         // Is this a packet from the video stream?
         if(packet->stream_index==videoStream) {
             time_start=clock();//开始时间
@@ -195,10 +199,11 @@ jobject  ffmpegDecode :: readFrame(JNIEnv *pEnv,int frameNumber){
                 LOGE("Decode Error.\n");
                 return NULL;
             }
-            // Did we get a video frame?
+            //if got_picture
             if(got_picture) {
-                if(++currentFrameNumber >= frameNumber) {
-//                    LOGI("frame %d", i);
+                LOGI("got_picture ");
+
+//                if(++currentFrameNumber >= frameNumber) {
                     time_start=clock();
                     //create a bitmap as the buffer for pFrameRGBA
                     bitmap = createBitmap(pEnv, pCodecCtx->width, pCodecCtx->height);
@@ -228,13 +233,11 @@ jobject  ffmpegDecode :: readFrame(JNIEnv *pEnv,int frameNumber){
                     // Free the YUV frame
                     av_free(pAvFrame);
 
+                    LOGI("got_picture aleady return");
                     return bitmap;//直接return
-                }
             }
             // Free the packet that was allocated by av_read_frame
             av_free_packet(packet);
-            // Free the RGB image
-            av_free(pFrameRGBA);
             // Free the YUV frame
             av_free(pAvFrame);
         }
@@ -252,7 +255,7 @@ int ffmpegDecode::getSkippedFramesNum() const
 }
 
 
-void ffmpegDecode::seekFrameBySec(int secs)
+void ffmpegDecode::seekFrameBySec(int seconds)
 {
     //获取duration
 //    int64_t duration = pFormatCtx->duration + 5000;
@@ -262,7 +265,7 @@ void ffmpegDecode::seekFrameBySec(int secs)
 //        return;
 
     //按timestampJumped进行跳转
-    int64_t timestampJumped =secs / av_q2d(pFormatCtx->streams[videoStream]->time_base);
+    int64_t timestampJumped =seconds / av_q2d(pFormatCtx->streams[videoStream]->time_base);
     printf("timestampJump %lld \n",timestampJumped);
     if(av_seek_frame(pFormatCtx,videoStream,timestampJumped,AVSEEK_FLAG_BACKWARD) < 0){//设置了视频流，timestamp就按照流的time_base
         printf("av_seek_frame error");

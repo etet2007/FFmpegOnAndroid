@@ -1,1 +1,1 @@
-include ':app', ':avlib'
+include ':app', ':avlib', ':mediaplayertest'
