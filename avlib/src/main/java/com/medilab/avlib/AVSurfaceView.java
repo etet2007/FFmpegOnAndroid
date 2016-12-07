@@ -12,6 +12,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.Toast;
 
 /**
  * bug:
@@ -26,6 +27,9 @@ public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback
     private volatile boolean mThreadFlag; //线程是否运行，为false线程结束。
     public boolean mIsPlaying=false;//播放与暂停
 
+    //拥有一个私有接口
+    private DecodeEvent mDecodeEvent;
+
 //    private boolean pathReady = false;
 //    private int counter;
 
@@ -36,6 +40,10 @@ public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback
 
     private Bitmap mBitmap;
     private Bitmap mBitmap2;
+
+    //测试取出某些区域
+//    private Bitmap bitmapRight;
+//    private Bitmap bitmapLeft;
 
     private int frameRateMils=0;//帧率
     //解码器对象
@@ -48,7 +56,6 @@ public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback
     private Runnable mRunnable=new Runnable() {
         @Override
         public void run() {
-
                 while (true) {
                     synchronized (lock){
 
@@ -72,12 +79,23 @@ public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback
 //                mBitmap2= (Bitmap) AVdecodeInClass.readFrame(object2);
 
                         if(mBitmap==null){
+                            Log.i(TAG, "readFrame failed.");
                             break;
                         }
                         if (mBitmap != null && canvas!=null) {
                             canvas.drawColor(Color.WHITE);
-                            canvas.drawBitmap(mBitmap, null, new Rect(0, 0, drawBitmapWidth, drawBitmapHeight), null);
+                      canvas.drawBitmap(mBitmap, null, new Rect(0, 0, drawBitmapWidth, drawBitmapHeight), null);
 //                      canvas.drawBitmap(mBitmap2,null,new Rect(100,100,drawBitmapWidth+100,drawBitmapHeight+100),null);
+
+                        if(mDecodeEvent!=null){
+                            mDecodeEvent.onNewFrame(mBitmap);
+                        }
+                            //测试取出某些区域
+//                            bitmapLeft=Bitmap.createBitmap(mBitmap,0,0,drawBitmapWidth/2,drawBitmapHeight);
+//                            bitmapRight=Bitmap.createBitmap(mBitmap,drawBitmapWidth/2,0,drawBitmapWidth/2,drawBitmapHeight);
+//                            canvas.drawBitmap(bitmapLeft, null, new Rect(0, 0, drawBitmapWidth/2, drawBitmapHeight), null);
+//                            canvas.drawBitmap(bitmapRight, null, new Rect(0, drawBitmapHeight, drawBitmapWidth/2, 2*drawBitmapHeight), null);
+
                         }
 
                         if (canvas != null) {
@@ -90,20 +108,20 @@ public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback
 
                         Log.i(TAG, "timePast " + timePast);
 
+
+                        long delayTime=frameRateMils-timePast;
                         //延时
-                        if (timePast < frameRateMils) {
+                        if (delayTime>0) {
                             try {
-                                Thread.sleep(frameRateMils - timePast);
+                                Log.i(TAG, "delayTime " + delayTime);
+                                Thread.sleep(delayTime);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
                         }
 
                     }
-
-
             }
-
         }
     };
 
@@ -140,7 +158,6 @@ public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback
         mSurfaceHolder.addCallback(this);
     }
 
-
     //在surface的大小发生改变时调用
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
@@ -153,17 +170,16 @@ public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback
         Log.d(TAG, "surfaceCreated");
         //获取解码器对象
 //        object=AVdecodeInClass.init(Environment.getExternalStorageDirectory().getAbsolutePath() + "/demo/sintel.mp4");
-        object=AVdecodeInClass.init("rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov");//test trsp流
-
+//        object=AVdecodeInClass.init("rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov");//test trsp流
+        object=AVdecodeInClass.init("rtmp://192.168.31.103/live");//test trsp流
 
         drawBitmapWidth=AVdecodeInClass.getWidth(object);
         drawBitmapHeight=AVdecodeInClass.getHeight(object);
         Log.i(TAG, "object width height "+AVdecodeInClass.getWidth(object)+"*"+AVdecodeInClass.getHeight(object));
         Log.i(TAG, "object getFrameRateMils "+AVdecodeInClass.getFrameRateMils(object));
 
-
         //按秒数跳转
-        AVdecodeInClass.seekFrameBySec(object,15);
+//        AVdecodeInClass.seekFrameBySec(object,15);
         //获得帧率
         frameRateMils=AVdecodeInClass.getFrameRateMils(object);
 
@@ -187,7 +203,9 @@ public class AVSurfaceView extends SurfaceView implements SurfaceHolder.Callback
 
         AVdecodeInClass.destroy(object);
         AVdecodeInClass.destroy(object2);
-
     }
 
+    public void setDecodeEvent(DecodeEvent decodeEvent) {
+        mDecodeEvent = decodeEvent;
+    }
 }

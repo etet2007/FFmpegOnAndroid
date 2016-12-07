@@ -96,10 +96,16 @@ void ffmpegDecode :: init(){
     //这里注册了所有的文件格式和编解码器的库，所以它们将被自动的使用在被打开的合适格式的文件上。注意你只需要调用 av_register_all()一次，因此我们在主函数main()中来调用它。如果你喜欢，也可以只注册特定的格式和编解码器，但是通常你没有必要这样做。
     av_register_all();
 
+    avformat_network_init();
+    //设置UDP
+    AVDictionary* options = NULL;
+    av_dict_set(&options, "rtmp_transport", "udp", 0);
+
     pFormatCtx = avformat_alloc_context();
+
     //打开视频文件,通过参数filepath来获得文件名。这个函数读取文件的头部并且把信息保存到我们给的AVFormatContext结构体中。
     //最后2个参数用来指定特殊的文件格式，缓冲大小和格式参数，但如果把它们设置为空NULL或者0，libavformat将自动检测这些参数。
-    if(avformat_open_input(&pFormatCtx,filepath,NULL,NULL)!=0)
+    if(avformat_open_input(&pFormatCtx,filepath,NULL,&options)!=0)
     {
         LOGE("cannot open the files.\n");
         isOpened= false;
@@ -132,6 +138,10 @@ void ffmpegDecode :: openDecode()
     }
     pCodecCtx=pFormatCtx->streams[videoStream]->codec;
 
+
+    //设置直接跳过某种帧
+//    pCodecCtx->skip_frame=AVDISCARD_NONKEY;
+
     //在库里面查找支持该格式的解码器
     pCodec=avcodec_find_decoder(pCodecCtx->codec_id);
     if(pCodec==NULL)
@@ -163,6 +173,7 @@ void ffmpegDecode :: prepare()
     packet=(AVPacket *)av_malloc(sizeof(AVPacket));
     av_new_packet(packet, y_size);
 
+
     m_video_avg_frame_rate=pFormatCtx->streams[videoStream]->avg_frame_rate; //赋值给平均帧率
 
     //输出信息-----------------------------
@@ -182,7 +193,7 @@ jobject  ffmpegDecode :: readFrame(JNIEnv *pEnv){
     long  time_duration = 0;
     // Read frames
     while(av_read_frame(pFormatCtx, packet)>=0) {
-//        LOGI("av_read_frame() runs");
+        LOGI("av_read_frame() runs");
         // Is this a packet from the video stream?
         if(packet->stream_index==videoStream) {
             time_start=clock();//开始时间
@@ -190,6 +201,7 @@ jobject  ffmpegDecode :: readFrame(JNIEnv *pEnv){
             pAvFrame=av_frame_alloc();//av_frame_alloc  avcodec_alloc_frame
             // Decode video frame
             ret = avcodec_decode_video2(pCodecCtx, pAvFrame, &got_picture, packet);//解码
+//            LOGI("av_frame_get_pkt_size(pAvFrame): %d \n",av_frame_get_pkt_size(pAvFrame));
             time_finish= clock();//结束时间
             time_duration=(time_finish - time_start);//计算时间差
             LOGI("avcodec_decode : %ld",time_duration);//10-08 14:38:53.271 17578-17910/com.example.wangalbert.prac_2 I/ffmpeg: time_duration : 55271
@@ -199,7 +211,7 @@ jobject  ffmpegDecode :: readFrame(JNIEnv *pEnv){
                 return NULL;
             }
             if(got_picture) {
-//                LOGI("got_picture ");
+                LOGI("got_picture ");
 
 //                if(++currentFrameNumber >= frameNumber) {
                     time_start=clock();

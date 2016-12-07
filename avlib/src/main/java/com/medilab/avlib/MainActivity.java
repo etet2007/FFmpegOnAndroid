@@ -1,5 +1,6 @@
 package com.medilab.avlib;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -28,6 +29,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 mAVSurfaceView.mIsPlaying=true;
+            }
+        });
+
+        mAVSurfaceView.setDecodeEvent(new DecodeEvent() {
+            @Override
+            public void onNewFrame(Bitmap bitmap) {
+
             }
         });
     }
